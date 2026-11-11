@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<script>
+  // The chosen theme (shared by both parts) is set before anything is drawn, so the page never flashes the other one.
+  try { var t = JSON.parse(localStorage.getItem("m3_theme")); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t } catch (e) {}
+</script>
+<title>MAI 630 · Module 3</title>
+<style>
+/* One page: every slide's script, a player fixed at the bottom with the speed. */
+:root {
+  --bg: #0E1117; --card: #171B24; --ink: #ECEFF4; --muted: #98A1B3; --line: rgba(255, 255, 255, .09);
+  --accent: #0A84FF; --accent-hi: #409CFF; --mark: rgba(10, 132, 255, .10); --word: rgba(10, 132, 255, .5); --read: rgba(10, 132, 255, .24); --done: rgba(10, 132, 255, .07);
+  color-scheme: dark;
+}
+/* Light: when the device is light and no theme was chosen, or when Light was chosen (the button at the top). */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) { --bg: #F5F5F7; --card: #FFFFFF; --ink: #1D1D1F; --muted: #6E6E73; --line: rgba(0, 0, 0, .08);
+    --accent: #007AFF; --accent-hi: #3395FF; --mark: rgba(0, 122, 255, .06); --word: rgba(0, 122, 255, .32); --read: rgba(0, 122, 255, .16); --done: rgba(0, 122, 255, .05); color-scheme: light }
+}
+:root[data-theme="light"] { --bg: #F5F5F7; --card: #FFFFFF; --ink: #1D1D1F; --muted: #6E6E73; --line: rgba(0, 0, 0, .08);
+    --accent: #007AFF; --accent-hi: #3395FF; --mark: rgba(0, 122, 255, .06); --word: rgba(0, 122, 255, .32); --read: rgba(0, 122, 255, .16); --done: rgba(0, 122, 255, .05); color-scheme: light }
+* { box-sizing: border-box }
+[hidden] { display: none !important }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: 64px }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 18px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; padding-bottom: 150px }
+button { font: inherit; color: inherit; -webkit-appearance: none; appearance: none; cursor: pointer }
+
+header { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, var(--bg) 82%, transparent); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+  border-bottom: .5px solid var(--line); padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px }
+.head { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 12px }
+.head h1 { flex: 1; min-width: 0; margin: 0; font-size: 17px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.head h1 span { color: var(--muted); font-weight: 500 }
+@media (max-width: 480px) { .head h1 .lg { display: none } .head h1 { flex: none; font-size: 16px } .head #jump { flex: 1; min-width: 0; max-width: none } .head { gap: 8px } }
+/* ---- comments ---- */
+.cm-go { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border: .5px solid var(--line); border-radius: 999px; background: var(--card); color: var(--ink); font-size: 14px; font-weight: 600 }
+.cm-go:hover, .cm-add:hover { border-color: var(--accent) }
+.cm-go svg, .cm-add svg { width: 17px; height: 17px }
+.cm-go b { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: var(--accent); color: #fff; font-size: 12px; line-height: 20px; text-align: center }
+.cm-go b:empty { display: none }
+.cm-add { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border: .5px solid var(--line); border-radius: 50%; background: transparent; color: var(--muted) }
+.cm-list { margin: 10px 0 2px; display: grid; gap: 8px }
+.cm-list:empty { display: none }
+.cm { border: .5px solid var(--line); border-left: 3px solid #FF9F0A; border-radius: 4px 10px 10px 4px; padding: 8px 10px 8px 12px; font-size: 15px; background: color-mix(in srgb, #FF9F0A 7%, transparent) }
+.cm q { display: block; color: var(--muted); font-style: italic; quotes: "“" "”"; margin-bottom: 4px; overflow-wrap: anywhere }
+.cm .note { white-space: pre-wrap; overflow-wrap: anywhere }
+.cm .acts { display: flex; gap: 4px; justify-content: flex-end; margin-top: 4px }
+.cm .acts button { border: 0; background: transparent; color: var(--muted); font-size: 13px; padding: 4px 8px; border-radius: 6px }
+.cm .acts button:hover { background: var(--mark); color: var(--ink) }
+.sel-bubble { position: fixed; z-index: 20; display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border: 0; border-radius: 999px;
+  background: #FF9F0A; color: #1D1D1F; font-size: 15px; font-weight: 650; box-shadow: 0 8px 24px rgba(0, 0, 0, .3) }
+.sel-bubble svg { width: 17px; height: 17px }
+.modal { position: fixed; inset: 0; z-index: 30; display: grid; grid-template-columns: minmax(0, 560px); justify-content: center; align-items: center; padding: 16px; background: rgba(0, 0, 0, .45); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px) }
+.dlg { width: 100%; min-width: 0; max-height: calc(100vh - 32px); overflow: auto; background: var(--card); border: .5px solid var(--line); border-radius: 18px; padding: 18px; box-shadow: 0 24px 60px rgba(0, 0, 0, .35) }
+.dlg h3 { margin: 0 0 10px; font-size: 17px }
+.dlg blockquote { margin: 0 0 12px; padding: 8px 12px; border-left: 3px solid #FF9F0A; background: color-mix(in srgb, #FF9F0A 8%, transparent); border-radius: 4px 8px 8px 4px; color: var(--muted); font-size: 15px; max-height: 30vh; overflow: auto; overflow-wrap: anywhere }
+.dlg textarea { width: 100%; min-height: 110px; resize: vertical; font: inherit; font-size: 16px; color: var(--ink); background: var(--bg); border: .5px solid var(--line); border-radius: 12px; padding: 10px 12px }
+.dlg textarea:focus { outline: 2px solid var(--accent); outline-offset: 0 }
+.dlg .row { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; flex-wrap: wrap }
+.btn { height: 38px; padding: 0 16px; border-radius: 10px; border: .5px solid var(--line); background: transparent; color: var(--ink); font-size: 15px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px }
+.btn svg { width: 17px; height: 17px }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff }
+.btn.danger { color: #FF453A }
+.btn:hover { filter: brightness(1.08) }
+.all-cm { display: grid; gap: 10px; margin: 6px 0 4px }
+.all-cm .go { border: 0; background: none; color: var(--accent); font-weight: 650; font-size: 14px; padding: 0; text-align: left }
+.empty { color: var(--muted); font-size: 15px; margin: 4px 0 }
+@media (max-width: 480px) { .cm-go span { display: none } .cm-go { padding: 0 10px } }
+.parts { flex: none }
+.head .parts button { height: 30px; padding: 0 12px; font-size: 14px }
+@media (max-width: 480px) { .head h1 { display: none } .head .parts button { padding: 0 9px; font-size: 13px } }
+.theme { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border: .5px solid var(--line); border-radius: 50%; background: var(--card); color: var(--ink) }
+.theme:hover { border-color: var(--accent) }
+.theme svg { width: 18px; height: 18px }
+.head select { flex: none; font: inherit; font-size: 14px; color: var(--ink); background: var(--card); border: .5px solid var(--line); border-radius: 9px; padding: 6px 8px; max-width: 46vw }
+
+main { max-width: 760px; margin: 0 auto; padding: 16px }
+.slide { background: var(--card); border: .5px solid var(--line); border-radius: 16px; padding: 18px 20px 14px; margin: 0 0 14px }
+.slide.on { border-color: color-mix(in srgb, var(--accent) 55%, transparent) }
+.slide-top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px }
+.slide-top .t { flex: 1; min-width: 0 }
+.num { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--accent); text-transform: uppercase }
+.slide h2 { margin: 2px 0 0; font-size: 19px; line-height: 1.3; font-weight: 650 }
+.listen { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 0; border-radius: 999px;
+  background: var(--accent); color: #fff; font-size: 15px; font-weight: 600 }
+.listen:hover { background: var(--accent-hi) }
+.listen svg { width: 15px; height: 15px }
+.p { margin: 0; padding: 6px 10px; margin: 2px -10px; border-radius: 10px; cursor: pointer; transition: background .2s }
+.p:hover { background: color-mix(in srgb, var(--mark) 60%, transparent) }
+.p.now { background: var(--mark) }
+.p .w { background: var(--word); border-radius: 4px; box-shadow: 0 0 0 2px var(--word); color: var(--ink) }
+/* while reading: what has been said is shaded, like a marker, and the rest waits a little lighter */
+.p.now { color: var(--muted) }
+.p .rd { background: var(--read); color: var(--ink); border-radius: 3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; transition: background .2s }
+.p.done { color: var(--ink); background: var(--done) }
+
+.player { position: fixed; left: 0; right: 0; bottom: 0; z-index: 6; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: color-mix(in srgb, var(--bg) 82%, transparent); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border-top: .5px solid var(--line) }
+.pl { max-width: 760px; margin: 0 auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center }
+.ctr { display: flex; align-items: center; gap: 6px }
+.ib { width: 42px; height: 42px; border: 0; border-radius: 50%; background: transparent; display: grid; place-items: center }
+.ib:hover { background: var(--mark) }
+.ib svg { width: 22px; height: 22px }
+#play { width: 50px; height: 50px; background: var(--accent); color: #fff }
+#play:hover { background: var(--accent-hi) }
+/* progress: how much of this part you've heard, the time you've listened and about how much is left */
+.prog { max-width: 760px; margin: 0 auto 8px }
+.bar { height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--muted) 22%, transparent); overflow: hidden }
+.bar i { display: block; height: 100%; width: 0; border-radius: 2px; background: var(--accent); transition: width .4s ease }
+.prow { display: flex; align-items: baseline; gap: 12px; margin-top: 6px; font-size: 13px; color: var(--muted) }
+#now { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+#stats { flex: none; white-space: nowrap; font-variant-numeric: tabular-nums }
+#stats b { color: var(--ink); font-weight: 650 }
+.seg { display: flex; align-items: stretch; padding: 2px; border-radius: 10px; background: color-mix(in srgb, var(--muted) 18%, transparent) }
+.seg button { display: inline-flex; align-items: center; justify-content: center; height: 30px; min-width: 0; padding: 0 9px; border: 0; border-radius: 8px;
+  background: transparent; font-size: 14px; font-weight: 500; line-height: 1; white-space: nowrap }
+.seg button[aria-checked="true"] { background: var(--card); font-weight: 650; box-shadow: 0 1px 3px rgba(0, 0, 0, .18) }
+.speed { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted) }
+@media (max-width: 560px) {
+  #now, .speed > span { display: none }
+  .pl { flex-wrap: nowrap; gap: 8px; justify-content: space-between }
+  .ctr { gap: 2px } .ib { width: 34px; height: 34px } .ib svg { width: 20px; height: 20px } #play { width: 44px; height: 44px }
+  .seg button { padding: 0 4px; font-size: 12px }
+  body { padding-bottom: 125px }
+  .prow { justify-content: center; margin-top: 5px } .prog { margin-bottom: 6px }
+}
+@media (max-width: 350px) { .pl { flex-wrap: wrap; justify-content: center } body { padding-bottom: 165px } }
+.note { max-width: 760px; margin: 0 auto 14px; color: var(--muted); font-size: 15px }
+</style>
+</head>
+<body>
+<header>
+  <div class="head">
+    <h1><span class="lg">MAI 630 · </span>Module 3</h1>
+    <div class="seg parts" id="parts" role="radiogroup" aria-label="Part"></div>
+    <select id="jump" aria-label="Go to slide"></select>
+    <button class="cm-go" id="cmGo" type="button" aria-label="Comments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Comments</span><b id="cmCount"></b></button>
+    <button class="theme" id="theme" type="button"></button>
+  </div>
+</header>
+<main id="list"></main>
+
+<button class="sel-bubble" id="selBubble" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6"/><path d="M9 10h6"/></svg>Comment</button>
+
+<div class="modal" id="cmModal" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="cmTitle">
+    <h3 id="cmTitle">Comment</h3>
+    <blockquote id="cmQuote"></blockquote>
+    <textarea id="cmText" placeholder="What would you change here?"></textarea>
+    <div class="row">
+      <button class="btn danger" id="cmDel" type="button" hidden>Delete</button>
+      <span style="flex:1"></span>
+      <button class="btn" id="cmCancel" type="button">Cancel</button>
+      <button class="btn primary" id="cmSave" type="button">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="allModal" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="allTitle">
+    <h3 id="allTitle">Your comments</h3>
+    <div class="all-cm" id="allList"></div>
+    <div class="row">
+      <button class="btn danger" id="cmClear" type="button">Delete all</button>
+      <span style="flex:1"></span>
+      <button class="btn" id="allClose" type="button">Close</button>
+      <button class="btn primary" id="cmDown" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Download</button>
+    </div>
+  </div>
+</div>
+
+<div class="player" role="region" aria-label="Player">
+  <div class="prog">
+    <div class="bar" id="bar" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="fill"></i></div>
+    <div class="prow"><span id="now">Press play, or tap any paragraph.</span><span id="stats"></span></div>
+  </div>
+  <div class="pl">
+    <div class="ctr">
+      <button class="ib" id="prev" type="button" aria-label="Previous slide"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+      <button class="ib" id="play" type="button" aria-label="Play"></button>
+      <button class="ib" id="next" type="button" aria-label="Next slide"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+      <button class="ib" id="stopAll" type="button" aria-label="Stop"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
+    </div>
+    <div class="speed"><span>Speed</span><div class="seg" id="speed" role="radiogroup" aria-label="Speed"></div></div>
+  </div>
+</div>
+
+<script src="data.js?v=fef1987c"></script>
+<script>
+(() => {
+  // The deck's slides, in parts (one per class). The page shows one part: #part-1, #part-2.
+  const ALL = window.SLIDES, PARTS = window.PARTS, SPOKEN = window.SPOKEN || {};
+  const PART = (() => {
+    const m = location.hash.match(/^#part-(\d+)$/), saved = (() => { try { return JSON.parse(localStorage.getItem("m3_part")) } catch (e) { return null } })();
+    return PARTS.find(p => p.p === (m ? +m[1] : saved)) || PARTS[0];
+  })();
+  const SL = ALL.filter(s => s.part === PART.p);
+  try { localStorage.setItem("m3_part", JSON.stringify(PART.p)) } catch (e) {}
+  if (location.hash !== "#part-" + PART.p) history.replaceState(null, "", "#part-" + PART.p);
+  const tts = "speechSynthesis" in window;
+  const PLAY = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4v16l13-8z"/></svg>';
+  const PAUSE = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>';
+  const ICON_CM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6"/><path d="M9 10h6"/></svg>';
+  const RATES = [0.7, 0.85, 1, 1.15, 1.3];
+  const store = { get(k, d) { try { const v = JSON.parse(localStorage.getItem("m3_" + k)); return v == null ? d : v } catch (e) { return d } },
+                  set(k, v) { try { localStorage.setItem("m3_" + k, JSON.stringify(v)) } catch (e) {} } };
+  const PK = `p${PART.p}_`;  // this part's own keys: its place and its time listened
+  // From the two earlier pages (part 1 and part 2 were separate): their speed, place, time and comments come along once.
+  if (!store.get("moved", false)) {
+    const old = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v } catch (e) { return d } };
+    const r = old("m3p1_rate", old("m3p2_rate", null)); if (r != null) store.set("rate", r);
+    for (const q of [1, 2]) { const h = old(`m3p${q}_heard`, 0); if (h) store.set(`p${q}_heard`, h) }
+    const moved = [];
+    for (const [q, first] of [[1, 1], [2, 52]]) for (const c of old(`m3p${q}_comments`, [])) {
+      const where = c.quote ? ALL.find(s => s.paras.some(p => p.includes(c.quote))) : null, s = where || ALL.find(s => s.n === first + c.i);
+      if (s) moved.push({ id: c.id, n: s.n, k: where ? where.paras.findIndex(p => p.includes(c.quote)) : c.k, quote: c.quote, para: "", title: s.title, note: c.note, at: c.at });
+    }
+    if (moved.length) store.set("comments", moved);
+    store.set("moved", true);
+  }
+  let rate = store.get("rate", 1);
+  if (!RATES.includes(rate)) rate = 1;
+  const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  // ---- the page ----
+  const list = document.getElementById("list"), jump = document.getElementById("jump"), now = document.getElementById("now");
+  list.innerHTML = (tts ? "" : '<p class="note">This browser cannot read aloud. Try Chrome, Safari or Edge.</p>') + SL.map((s, i) => `
+    <section class="slide" id="s${s.n}" data-i="${i}">
+      <div class="slide-top">
+        <div class="t"><div class="num">Slide ${s.n}</div><h2>${esc(s.title)}</h2></div>
+        <button class="cm-add" type="button" data-cm="${i}" aria-label="Comment on slide ${s.n}" title="Comment on this slide">${ICON_CM}</button>
+        <button class="listen" type="button" data-i="${i}">${PLAY}<span>Listen</span></button>
+      </div>
+      ${s.paras.map((p, k) => `<p class="p" data-i="${i}" data-k="${k}">${esc(p)}</p>`).join("")}
+      <div class="cm-list" id="cm${i}"></div>
+    </section>`).join("");
+  jump.innerHTML = SL.map((s, i) => `<option value="${i}">${s.n} · ${esc(s.title)}</option>`).join("");
+  const speedBox = document.getElementById("speed");
+  speedBox.innerHTML = RATES.map(r => `<button type="button" role="radio" aria-checked="${r === rate}" data-r="${r}">${r}×</button>`).join("");
+
+  // ---- voice: the most natural English voice on this device ----
+  const SKIP = /^(Albert|Bad News|Bahh|Bells|Boing|Bubbles|Cellos|Good News|Jester|Organ|Superstar|Trinoids|Whisper|Wobble|Zarvox|Grandma|Grandpa|Eddy|Flo|Reed|Rocko|Sandy|Shelley|Junior|Ralph|Fred|Kathy)\b/i;
+  function voiceRank(v) {
+    const id = v.name + " " + (v.voiceURI || "");
+    if (SKIP.test(v.name) || /compact|espeak/i.test(id)) return 0;
+    if (/premium/i.test(id)) return 6;
+    if (/enhanced|neural/i.test(id)) return 5;
+    if (/natural/i.test(id)) return 4;
+    if (/google/i.test(id)) return 3;
+    if (/network/i.test(id) || v.localService === false) return 2;
+    return 1;
+  }
+  const isUS = v => /^en[-_]US/i.test(v.lang);
+  function voice() {
+    if (!tts) return null;
+    const vs = speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang));
+    return vs.sort((a, b) => (isUS(b) - isUS(a)) || (voiceRank(b) - voiceRank(a)) || (/^Samantha/i.test(b.name) - /^Samantha/i.test(a.name)))[0] || null;
+  }
+  if (tts) speechSynthesis.onvoiceschanged = () => {};
+
+  // What the voice says: without the figures in parentheses ("thirty (30)"), without the "1." that starts a paragraph,
+  // and with file names read aloud ("best.pt" -> "best dot P T"). disp() maps a place in the speech back to the text on screen.
+  const KEYS = Object.keys(SPOKEN).sort((a, b) => b.length - a.length).map(k => k.replace(/[.*+?^${}()|[\]\\\/]/g, "\\$&")).join("|");
+  const RX = new RegExp(`^\\d+\\.\\s+|\\s*\\([^()]*\\d[^()]*\\)${KEYS ? `|(^|[\\s"'(“])(${KEYS})(?=$|[\\s"',.;:?!)”])` : ""}`, "g");
+  function speechOf(text) {
+    let say = "", last = 0, m;
+    const marks = [];
+    const copy = (a, b) => { if (b > a) { marks.push({ at: say.length, d: a }); say += text.slice(a, b) } };
+    RX.lastIndex = 0;
+    while ((m = RX.exec(text))) {
+      const pre = (m[1] || "").length;
+      copy(last, m.index + pre);
+      if (m[2] !== undefined) { marks.push({ at: say.length, d: m.index + pre, fixed: true }); say += SPOKEN[m[2]] }
+      last = m.index + m[0].length;
+      if (!m[0]) RX.lastIndex++;
+    }
+    copy(last, text.length);
+    const disp = i => { let b = marks[0] || { at: 0, d: 0 }; for (const k of marks) { if (k.at <= i) b = k; else break } return b.fixed ? b.d : b.d + (i - b.at) };
+    return { say, disp };
+  }
+  // Internet voices (Google's) stop after about 15 seconds, so a long paragraph goes to them sentence by sentence.
+  // from: where in the speech to begin (a speed change goes on from the word being said).
+  function chunks(say, v, from = 0) {
+    const rest = say.slice(from);
+    if (!v || v.localService !== false || rest.length < 200) return [{ at: from, text: rest }];
+    const out = []; let at = from;
+    for (const piece of rest.match(/[^.?!]+[.?!]*\s*/g) || [rest]) {
+      const prev = out[out.length - 1];
+      if (prev && prev.text.length + piece.length < 200) prev.text += piece; else out.push({ at, text: piece });
+      at += piece.length;
+    }
+    return out;
+  }
+
+  // ---- reading ----
+  let cur = { i: 0, k: 0 }, playing = false, token = 0;
+  let saidAt = 0;  // where the word being said starts, in the speech of the paragraph
+  let voicePace = 0.0154;
+
+  // ---- progress ----
+  // Words of each paragraph as the voice says them; how many come before each one; the total of this part.
+  const wc = t => (t.match(/\S+/g) || []).length;
+  const BEFORE = []; let TOTAL = 0;
+  SL.forEach((s, i) => { BEFORE[i] = s.paras.map(p => { const b = TOTAL; TOTAL += wc(speechOf(p).say); return b }) });
+  const heardWords = () => finished ? TOTAL : BEFORE[cur.i][cur.k] + wc(speechOf(SL[cur.i].paras[cur.k]).say.slice(0, saidAt));
+  let finished = false, heardMs = store.get(PK + "heard", 0), playMs = 0, playWords = 0, lastH = -1, lastT = 0;
+  const WPM0 = 155;  // words a minute at 1× until this voice's own pace is measured
+  const wpm = () => playMs > 20000 && playWords > 30 ? playWords / (playMs / 60000) : WPM0 * rate;
+  const fmtTime = ms => { const t = Math.floor(ms / 1000), h = Math.floor(t / 3600), m = Math.floor(t / 60) % 60, x = t % 60;
+    return h ? `${h}:${String(m).padStart(2, "0")}:${String(x).padStart(2, "0")}` : `${m}:${String(x).padStart(2, "0")}` };
+  const fmtLeft = min => min < 1 ? "less than a minute" : min < 60 ? `${Math.round(min)} min` : `${Math.floor(min / 60)} h ${Math.round(min % 60)} min`;
+  function stats() {
+    const h = heardWords(), pct = Math.min(100, h / TOTAL * 100);
+    document.getElementById("fill").style.width = pct.toFixed(2) + "%";
+    document.getElementById("bar").setAttribute("aria-valuenow", String(Math.floor(pct)));
+    const left = finished ? "done" : `about ${fmtLeft((TOTAL - h) / wpm())} left`;
+    document.getElementById("stats").innerHTML = `<b>${Math.floor(pct)}%</b> · ${fmtTime(heardMs)} listened · ${left}`;
+  }
+  // Every second while the voice reads: the time listened grows, the pace is measured, and the place is kept on this device.
+  setInterval(() => {
+    const t = performance.now();
+    if (playing && lastT) {
+      const dt = Math.min(2000, t - lastT), h = heardWords();
+      heardMs += dt; playMs += dt;
+      if (lastH >= 0 && h > lastH && h - lastH < 40) playWords += h - lastH;  // a jump to another slide doesn't count
+      lastH = h;
+      store.set(PK + "heard", Math.round(heardMs));
+      keepPlace();
+    } else lastH = -1;
+    lastT = t;
+    stats();
+  }, 1000);
+  const keepPlace = () => store.set(PK + "pos", { n: SL[cur.i].n, k: cur.k, at: saidAt });  // letters per millisecond at 1× for voices that don't tell each word; learned as they speak
+  const playBtn = document.getElementById("play");
+  const pEl = (i, k) => document.querySelector(`.p[data-i="${i}"][data-k="${k}"]`);
+  function paint() {
+    playBtn.innerHTML = playing ? PAUSE : PLAY;
+    playBtn.setAttribute("aria-label", playing ? "Pause" : paused ? "Resume" : "Play");
+    document.querySelectorAll(".listen").forEach(b => {
+      const here = +b.dataset.i === cur.i, on = playing && here;
+      b.innerHTML = (on ? PAUSE : PLAY) + `<span>${on ? "Pause" : paused && here ? "Resume" : "Listen"}</span>`;
+    });
+    document.querySelectorAll(".slide.on").forEach(x => x.classList.remove("on"));
+    document.getElementById("s" + SL[cur.i].n).classList.add("on");
+    now.textContent = `Slide ${SL[cur.i].n} of ${SL[SL.length - 1].n} · ${SL[cur.i].title}`;
+    if (paused) now.textContent = "Paused · " + now.textContent;
+    jump.value = String(cur.i);
+  }
+  // The paragraph being read: the part already said is shaded, the word being said stands out.
+  // Paragraphs already read in this slide keep a light shade; another slide starts clean.
+  function unmark(keepDone) {
+    document.querySelectorAll(".p.now").forEach(p => { p.classList.remove("now"); p.textContent = p.textContent; if (keepDone) p.classList.add("done") });
+    if (!keepDone) document.querySelectorAll(".p.done").forEach(p => p.classList.remove("done"));
+  }
+  function mark(el, text, a, b) {
+    const sel = getSelection();
+    if (sel && !sel.isCollapsed && sel.anchorNode && el.contains(sel.anchorNode)) return;  // you're selecting words here: don't redraw
+    if (a == null) { el.textContent = text; return }
+    el.innerHTML = (a > 0 ? `<span class="rd">${esc(text.slice(0, a))}</span>` : "") + `<span class="w">${esc(text.slice(a, b))}</span>` + esc(text.slice(b));
+  }
+  // The word that starts at (or just before) a place in the speech: [start, end] in the speech.
+  function wordAt(say, at) {
+    while (at > 0 && /[\w'’.-]/.test(say[at - 1])) at--;
+    while (at < say.length && /\s/.test(say[at])) at++;
+    const len = (say.slice(at).match(/^[\w'’.-]+/) || [""])[0].replace(/\.$/, "").length || 1;
+    return [at, at + len];
+  }
+  function follow(el) {
+    const r = el.getBoundingClientRect(), top = 80, bottom = innerHeight - 170;
+    if (r.top < top || r.bottom > bottom) el.scrollIntoView({ behavior: "smooth", block: r.height > bottom - top ? "start" : "center" });
+  }
+  // Pause: the voice stops and the place is kept (the words already said stay shaded); Play goes on from that word.
+  // Stop (the square): everything ends and the slide is back at its beginning.
+  let paused = false;
+  function pause() { token++; playing = false; paused = true; if (tts) speechSynthesis.cancel(); keepPlace(); paint(); stats() }
+  // The slide being read goes to the top of the screen, and each new slide scrolls up into that place, so the slide
+  // you're practicing is always first. Inside a long slide, the page also follows the paragraph being read.
+  let topSlide = -1;
+  function followSlide(el) {
+    const sec = document.getElementById("s" + SL[cur.i].n);
+    if (topSlide !== cur.i) {
+      topSlide = cur.i;
+      sec.scrollIntoView({ behavior: "smooth", block: "start" });
+      const er = el.getBoundingClientRect(), sr = sec.getBoundingClientRect();
+      if (er.bottom - sr.top + 64 > innerHeight - 170) setTimeout(() => follow(el), 700);  // a paragraph lower than the screen
+      return;
+    }
+    follow(el);
+  }
+  function stop() { token++; playing = false; paused = false; saidAt = 0; if (tts) speechSynthesis.cancel(); unmark(); cur.k = 0; keepPlace(); paint(); stats() }
+  function start(i, k, from = 0) {
+    if (!tts) return;
+    token++; speechSynthesis.cancel();
+    cur = { i, k }; playing = true; paused = false; finished = false; topSlide = -1; paint();
+    const my = token;
+    setTimeout(() => { if (my === token) say(my, from) }, 120);  // right after cancel() some browsers drop what comes at once
+  }
+  const resume = () => start(cur.i, cur.k, paused ? saidAt : 0);
+  const moveTo = i => { if (playing) start(i, 0); else { paused = false; finished = false; saidAt = 0; cur = { i, k: 0 }; unmark(); keepPlace(); paint(); stats() } };
+  function say(my, from = 0) {
+    const s = SL[cur.i], text = s.paras[cur.k], el = pEl(cur.i, cur.k);
+    unmark(cur.k > 0); el.classList.remove("done"); el.classList.add("now"); followSlide(el);
+    // earlier paragraphs of this slide count as read (also when reading starts in the middle of a slide)
+    for (let k = 0; k < cur.k; k++) pEl(cur.i, k).classList.add("done");
+    document.querySelectorAll(`.p.done:not([data-i="${cur.i}"])`).forEach(p => p.classList.remove("done"));
+    const sp = speechOf(text), v = voice(), parts = chunks(sp.say, v, from);
+    saidAt = from;
+    let n = 0;
+    const next = () => {
+      if (my !== token) return;
+      if (n >= parts.length) { advance(my); return }
+      const c = parts[n++], u = new SpeechSynthesisUtterance(c.text);
+      if (v) u.voice = v;
+      u.lang = v ? v.lang.replace("_", "-") : "en-US";
+      u.rate = rate;
+      const show = at => {
+        const [x, y] = wordAt(sp.say, Math.min(at, sp.say.length - 1));
+        saidAt = x; stats();
+        const a = sp.disp(x), b = Math.max(a + 1, sp.disp(y - 1) + 1);
+        mark(el, text, a, Math.min(b, text.length));
+      };
+      // Voices that tell each word move the shade word by word. For the ones that don't (Google's in Chrome), the shade
+      // moves by time: it starts right at each piece (pieces of under 200 letters), goes at the pace measured on the pieces
+      // already said, and stops just before the end of the piece until the voice gets there.
+      let told = false, timer = 0, t0 = 0;
+      u.onstart = () => {
+        if (my !== token) return;
+        t0 = performance.now(); show(c.at);
+        clearInterval(timer);
+        timer = setInterval(() => {
+          if (my !== token || told) { clearInterval(timer); return }
+          const est = Math.floor((performance.now() - t0) * voicePace * rate);
+          show(c.at + Math.min(est, c.text.length - 2));
+        }, 150);
+      };
+      u.onboundary = e => {
+        if (my !== token || (e.name && e.name !== "word")) return;
+        told = true; clearInterval(timer);
+        show(c.at + e.charIndex);
+      };
+      const done = () => {
+        clearInterval(timer);
+        const ms = performance.now() - t0;
+        if (!told && t0 && ms > 1500 && my === token) voicePace = voicePace * .6 + (c.text.length / ms / rate) * .4;  // learn this voice's pace
+        next();
+      };
+      u.onend = done; u.onerror = e => { clearInterval(timer); if (e.error !== "interrupted" && e.error !== "canceled") next() };
+      speechSynthesis.speak(u);
+    };
+    next();
+  }
+  function advance(my) {
+    if (my !== token) return;
+    const s = SL[cur.i];
+    if (cur.k + 1 < s.paras.length) cur.k++;
+    else if (cur.i + 1 < SL.length) { cur = { i: cur.i + 1, k: 0 }; paint() }
+    else { stop(); cur = { i: 0, k: 0 }; keepPlace(); finished = true; stats(); now.textContent = `That's the end of part ${PART.p}.`; return }
+    setTimeout(() => { if (my === token) say(my) }, cur.k === 0 ? 700 : 250);  // a short pause between paragraphs, a longer one between slides
+  }
+
+  // ---- controls ----
+  playBtn.onclick = () => playing ? pause() : resume();
+  document.getElementById("stopAll").onclick = stop;
+  // ⏮ goes back to the start of this slide while it is being read past its first paragraph, otherwise to the slide before
+  document.getElementById("prev").onclick = () => { const i = Math.max(0, cur.i - ((cur.k > 0 || saidAt > 0) && (playing || paused) ? 0 : 1)); moveTo(i); go(i) };
+  document.getElementById("next").onclick = () => { const i = Math.min(SL.length - 1, cur.i + 1); moveTo(i); go(i) };
+  const go = i => document.getElementById("s" + SL[i].n).scrollIntoView({ behavior: "smooth", block: "start" });
+  jump.onchange = () => { const i = +jump.value; moveTo(i); go(i) };
+  list.addEventListener("click", e => {
+    const b = e.target.closest(".listen");
+    if (b) { const i = +b.dataset.i; if (playing && cur.i === i) pause(); else if (paused && cur.i === i) resume(); else start(i, 0); return }
+    const p = e.target.closest(".p");
+    if (p && !getSelection().toString()) start(+p.dataset.i, +p.dataset.k);
+  });
+  speedBox.onclick = e => {
+    const b = e.target.closest("button"); if (!b) return;
+    rate = +b.dataset.r; store.set("rate", rate);
+    speedBox.querySelectorAll("button").forEach(x => x.setAttribute("aria-checked", String(x === b)));
+    // The voice goes on from the word it was saying, now at the new speed (a voice can't change speed mid-sentence,
+    // so it stops and picks up again at that word).
+    if (playing) {
+      const my = ++token;
+      speechSynthesis.cancel();
+      setTimeout(() => { if (my === token) say(my, saidAt) }, 120);
+    }
+  };
+  document.addEventListener("keydown", e => {
+    if (e.target.closest("select, input, textarea")) return;
+    if (!cmModal.hidden || !allModal.hidden) { if (e.key === "Escape") { closeCm(); allModal.hidden = true } return }
+    if (e.code === "Space") { e.preventDefault(); playBtn.click() }
+    else if (e.key === "ArrowRight") document.getElementById("next").click();
+    else if (e.key === "ArrowLeft") document.getElementById("prev").click();
+    else if (e.key === "Escape") stop();
+  });
+  addEventListener("pagehide", () => { if (tts) speechSynthesis.cancel() });
+  // Opening the page again: it goes back to where you were, paused, with what you'd heard shaded; Play goes on from there.
+  // (the place is kept by slide number; if the speech changed since, a place past the end of the paragraph starts it again)
+  const pos = store.get(PK + "pos", null), pi = pos ? SL.findIndex(s => s.n === pos.n) : -1;
+  const goto = store.get("goto", null); store.set("goto", null);  // a comment of the other part, opened from the list
+  if (pi >= 0 && SL[pi].paras[pos.k] != null) {
+    cur = { i: pi, k: pos.k }; saidAt = (pos.at || 0) < speechOf(SL[pi].paras[pos.k]).say.length ? pos.at || 0 : 0;
+    if (cur.i || cur.k || saidAt) {
+      paused = true;
+      for (let k = 0; k < cur.k; k++) pEl(cur.i, k).classList.add("done");
+      const el = pEl(cur.i, cur.k), text = SL[cur.i].paras[cur.k];
+      el.classList.add("now");
+      if (saidAt) { const sp = speechOf(text), [x, y] = wordAt(sp.say, saidAt); mark(el, text, sp.disp(x), Math.min(text.length, sp.disp(y - 1) + 1)) }
+      if (goto == null) setTimeout(() => document.getElementById("s" + SL[cur.i].n).scrollIntoView({ block: "start" }), 60);
+    }
+  }
+  if (goto != null && document.getElementById("s" + goto)) setTimeout(() => document.getElementById("s" + goto).scrollIntoView({ block: "start" }), 60);
+  // ---- comments: on words you select, or on a whole slide; kept on this device; downloaded as one file ----
+  let comments = store.get("comments", []);
+  const saveCm = () => store.set("comments", comments);
+  const cmModal = document.getElementById("cmModal"), cmText = document.getElementById("cmText"), bubble = document.getElementById("selBubble");
+  let editing = null;  // the comment open in the window
+  function renderCm() {
+    SL.forEach((s, i) => {
+      document.getElementById("cm" + i).innerHTML = comments.filter(c => c.n === s.n).map(c => `
+        <div class="cm" data-id="${c.id}">${c.quote ? `<q>${esc(c.quote)}</q>` : `<q>Whole slide</q>`}<div class="note">${esc(c.note)}</div>
+          <div class="acts"><button type="button" data-edit="${c.id}">Edit</button><button type="button" data-del="${c.id}">Delete</button></div></div>`).join("");
+    });
+    document.getElementById("cmCount").textContent = comments.length ? String(comments.length) : "";
+  }
+  function openCm(c) {
+    editing = c;
+    const s = ALL.find(x => x.n === c.n) || { n: c.n, title: c.title || "" };
+    document.getElementById("cmTitle").textContent = `Comment · Slide ${s.n} · ${s.title}`;
+    document.getElementById("cmQuote").textContent = c.quote ? `“${c.quote}”` : "The whole slide";
+    document.getElementById("cmDel").hidden = !comments.includes(c);
+    cmText.value = c.note || "";
+    bubble.hidden = true;
+    cmModal.hidden = false;
+    setTimeout(() => cmText.focus(), 30);
+  }
+  const closeCm = () => { cmModal.hidden = true; editing = null };
+  document.getElementById("cmCancel").onclick = closeCm;
+  document.getElementById("cmSave").onclick = () => {
+    const note = cmText.value.trim();
+    if (!note) { cmText.focus(); return }
+    editing.note = note; editing.at = new Date().toISOString();
+    if (!comments.includes(editing)) comments.push(editing);
+    comments.sort((a, b) => a.n - b.n || (a.k ?? -1) - (b.k ?? -1) || a.id - b.id);
+    saveCm(); renderCm(); closeCm(); if (!allModal.hidden) renderAll();
+  };
+  document.getElementById("cmDel").onclick = () => { comments = comments.filter(c => c !== editing); saveCm(); renderCm(); closeCm(); if (!allModal.hidden) renderAll() };
+  cmModal.addEventListener("click", e => { if (e.target === cmModal) closeCm() });
+  cmText.addEventListener("keydown", e => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) document.getElementById("cmSave").click(); if (e.key === "Escape") closeCm() });
+
+  // Select words in a paragraph: a "Comment" button appears by them.
+  let pending = null;
+  function checkSel() {
+    const sel = getSelection();
+    if (!sel || sel.isCollapsed || !sel.rangeCount) { bubble.hidden = true; pending = null; return }
+    const r = sel.getRangeAt(0), node = n => (n.nodeType === 1 ? n : n.parentElement);
+    const p1 = node(r.startContainer)?.closest(".p"), p2 = node(r.endContainer)?.closest(".p");
+    const sec = node(r.commonAncestorContainer)?.closest(".slide") || (p1 && p1.closest(".slide"));
+    const quote = sel.toString().replace(/\s+/g, " ").trim();
+    if (!p1 || !sec || !quote || (p2 && p2.closest(".slide") !== sec)) { bubble.hidden = true; pending = null; return }
+    const s = SL[+sec.dataset.i], k = +p1.dataset.k;
+    pending = { n: s.n, k, quote, para: s.paras[k], title: s.title };
+    const rect = r.getBoundingClientRect(), touch = matchMedia("(pointer: coarse)").matches;
+    bubble.hidden = false;
+    const bw = bubble.offsetWidth, bh = bubble.offsetHeight;
+    let top = touch ? rect.bottom + 12 : rect.top - bh - 10;  // on a phone, below the words (the phone's own menu is above)
+    if (top < 60) top = rect.bottom + 12;
+    if (top + bh > innerHeight - 160) top = Math.max(60, rect.top - bh - 10);
+    bubble.style.top = top + "px";
+    bubble.style.left = Math.min(innerWidth - bw - 10, Math.max(10, rect.left + rect.width / 2 - bw / 2)) + "px";
+  }
+  let selT = 0;
+  document.addEventListener("selectionchange", () => { clearTimeout(selT); selT = setTimeout(checkSel, 250) });
+  addEventListener("scroll", () => { if (!bubble.hidden) checkSel() }, { passive: true });
+  bubble.addEventListener("pointerdown", e => e.preventDefault());  // keep the selection when the button is pressed
+  bubble.onclick = () => { if (pending) { openCm({ id: Date.now(), ...pending, note: "" }); getSelection().removeAllRanges() } };
+  list.addEventListener("click", e => {
+    const add = e.target.closest("[data-cm]");
+    if (add) { const s = SL[+add.dataset.cm]; openCm({ id: Date.now(), n: s.n, k: null, quote: "", para: "", title: s.title, note: "" }); return }
+    const ed = e.target.closest("[data-edit]"), del = e.target.closest("[data-del]");
+    if (ed) openCm(comments.find(c => c.id === +ed.dataset.edit));
+    if (del) { comments = comments.filter(c => c.id !== +del.dataset.del); saveCm(); renderCm() }
+  });
+
+  // All comments: a list to look over, jump to, delete, and download as one Markdown file for the conversation.
+  const allModal = document.getElementById("allModal");
+  function renderAll() {
+    const slideOf = c => ALL.find(x => x.n === c.n) || { n: c.n, title: c.title || "", part: 0 };
+    document.getElementById("allList").innerHTML = comments.length ? comments.map(c => `
+      <div class="cm"><button class="go" type="button" data-go="${c.n}">Part ${slideOf(c).part || "?"} · Slide ${c.n} · ${esc(slideOf(c).title)}</button>
+        ${c.quote ? `<q>${esc(c.quote)}</q>` : `<q>Whole slide</q>`}<div class="note">${esc(c.note)}</div></div>`).join("")
+      : '<p class="empty">No comments yet. Select some words in a paragraph, or press the comment button on a slide.</p>';
+    document.getElementById("cmDown").disabled = !comments.length;
+  }
+  document.getElementById("cmGo").onclick = () => { renderAll(); allModal.hidden = false };
+  document.getElementById("allClose").onclick = () => { allModal.hidden = true };
+  allModal.addEventListener("click", e => {
+    if (e.target === allModal) { allModal.hidden = true; return }
+    const g = e.target.closest("[data-go]");
+    if (!g) return;
+    allModal.hidden = true;
+    const n = +g.dataset.go, el = document.getElementById("s" + n), s = ALL.find(x => x.n === n);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    else if (s) { store.set("goto", n); location.hash = "#part-" + s.part; location.reload() }  // it's in the other part
+  });
+  document.getElementById("cmClear").onclick = () => {
+    if (!comments.length || !confirm(`Delete all ${comments.length} comments? This can't be undone.`)) return;
+    comments = []; saveCm(); renderCm(); renderAll();
+  };
+  function commentsFile() {
+    const d = new Date(), lines = [`# Comments on the speech · MAI 630 · Module 3`, "", `${comments.length} comments · ${d.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}`, ""];
+    let lastPart = -1, last = -1;
+    for (const c of comments) {
+      const s = ALL.find(x => x.n === c.n) || { n: c.n, title: c.title || "", part: 0, paras: [] };
+      if (s.part !== lastPart) { const pt = PARTS.find(x => x.p === s.part); lines.push(`# Part ${s.part || "?"}${pt ? ` · Class ${pt.cls} · ${pt.title}` : ""}`, ""); lastPart = s.part }
+      if (c.n !== last) { lines.push(`## Slide ${s.n} · ${s.title}`, ""); last = c.n }
+      if (c.quote) {
+        lines.push(`**On:** "${c.quote}"`, "");
+        const para = c.para || (c.k != null ? s.paras[c.k] : "");
+        if (para) lines.push(`**Paragraph ${c.k + 1}${c.para && s.paras[c.k] !== c.para ? " (as it was when you commented)" : ""}:** ${para}`, "");
+      } else lines.push("**On:** the whole slide", "");
+      lines.push(`**Comment:** ${c.note}`, "", "---", "");
+    }
+    return lines.join("\n");
+  }
+  document.getElementById("cmDown").onclick = () => {
+    if (!comments.length) return;
+    const blob = new Blob([commentsFile()], { type: "text/markdown;charset=utf-8" }), a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `mai630m3-comments-${new Date().toISOString().slice(0, 10)}.md`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  };
+  renderCm();
+
+  // Part 1 / Part 2: each part keeps its own place and time; the voice stops and the page opens the other part.
+  const partsBox = document.getElementById("parts");
+  partsBox.innerHTML = PARTS.map(p => `<button type="button" role="radio" aria-checked="${p.p === PART.p}" data-part="${p.p}" title="Class ${esc(p.cls)} · ${esc(p.title)}">Part ${p.p}</button>`).join("");
+  partsBox.onclick = e => {
+    const b = e.target.closest("[data-part]"); if (!b || +b.dataset.part === PART.p) return;
+    if (tts) speechSynthesis.cancel();
+    keepPlace();
+    location.hash = "#part-" + b.dataset.part; location.reload();
+  };
+  addEventListener("hashchange", () => { const m = location.hash.match(/^#part-(\d+)$/); if (m && +m[1] !== PART.p) location.reload() });
+
+  // Theme: Auto (follows the device) → Light → Dark. The icon shows the theme in use (Lucide icons).
+  const ICON = {
+    auto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 18a6 6 0 0 0 0-12v12z"/></svg>',
+    light: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>',
+    dark: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>'
+  };
+  const NAME = { auto: "Auto", light: "Light", dark: "Dark" }, NEXT = { auto: "light", light: "dark", dark: "auto" };
+  const themeBtn = document.getElementById("theme");
+  let theme = (() => { try { const t = JSON.parse(localStorage.getItem("m3_theme")); return t === "light" || t === "dark" ? t : "auto" } catch (e) { return "auto" } })();
+  function setTheme(t) {
+    theme = t;
+    if (t === "auto") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = t;
+    try { localStorage.setItem("m3_theme", JSON.stringify(t)) } catch (e) {}
+    themeBtn.innerHTML = ICON[t];
+    themeBtn.setAttribute("aria-label", `Theme: ${NAME[t]}. Change to ${NAME[NEXT[t]]}`);
+    themeBtn.title = `Theme: ${NAME[t]}`;
+  }
+  themeBtn.onclick = () => setTheme(NEXT[theme]);
+  setTheme(theme);
+  paint();
+  stats();
+})();
+</script>
+</body>
+</html>
