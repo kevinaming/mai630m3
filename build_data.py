@@ -69,7 +69,22 @@ for pt in parts:
 spoken = {t: spoken_name(t) for t in sorted(names)}
 spoken.update({"mAP": "M A P", "imgsz": "image size", ".gitignore": "dot git ignore"})
 
-body = ("window.PARTS = " + json.dumps(parts, ensure_ascii=False) + ";\nwindow.SLIDES = " + json.dumps(slides, ensure_ascii=False)
+# Pronunciation of every word in the speech (for the words you save to practice), from the CMU Pronouncing Dictionary.
+import pron
+pr, missing = {}, set()
+for sl in slides:
+    for p in sl["paras"]:
+        for w in re.findall(r"[A-Za-z][A-Za-z'’]*", re.sub(r"\([^()]*\d[^()]*\)", "", p)):
+            key = w if w in pron.CASED else w.lower().replace("’", "'")
+            if key in pr: continue
+            r = pron.lookup(w)
+            if r: pr[key] = r
+            else: missing.add(w)
+if missing: print("no pronunciation for:", " ".join(sorted(missing, key=str.lower)))
+
+body = ("/* Pronunciations from the CMU Pronouncing Dictionary, Copyright (C) 1993-2015 Carnegie Mellon University (see CMUDICT-LICENSE.txt). */\n"
+        + "window.PRON = " + json.dumps(pr, ensure_ascii=False, separators=(",", ":")) + ";\n"
+        + "window.PARTS = " + json.dumps(parts, ensure_ascii=False) + ";\nwindow.SLIDES = " + json.dumps(slides, ensure_ascii=False)
         + ";\nwindow.SPOKEN = " + json.dumps(spoken, ensure_ascii=False, indent=0) + ";\n")
 open(os.path.join(HERE, "data.js"), "w").write(body)
 digest = hashlib.sha1(body.encode()).hexdigest()[:8]

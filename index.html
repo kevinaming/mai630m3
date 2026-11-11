@@ -50,9 +50,27 @@ header { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, va
 .cm .acts { display: flex; gap: 4px; justify-content: flex-end; margin-top: 4px }
 .cm .acts button { border: 0; background: transparent; color: var(--muted); font-size: 13px; padding: 4px 8px; border-radius: 6px }
 .cm .acts button:hover { background: var(--mark); color: var(--ink) }
-.sel-bubble { position: fixed; z-index: 20; display: inline-flex; align-items: center; gap: 6px; height: 38px; padding: 0 14px; border: 0; border-radius: 999px;
-  background: #FF9F0A; color: #1D1D1F; font-size: 15px; font-weight: 650; box-shadow: 0 8px 24px rgba(0, 0, 0, .3) }
+.sel-bubble { position: fixed; z-index: 20; display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: #1D1D1F; box-shadow: 0 8px 24px rgba(0, 0, 0, .3) }
+.sel-bubble button { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border: 0; border-radius: 999px; font-size: 15px; font-weight: 650 }
 .sel-bubble svg { width: 17px; height: 17px }
+#selSave { background: #30D158; color: #0B2E14 }
+#selCm { background: #FF9F0A; color: #1D1D1F }
+/* ---- the words you save to practice their pronunciation ---- */
+.wd { border: .5px solid var(--line); border-left: 3px solid #30D158; border-radius: 4px 12px 12px 4px; padding: 10px 12px; background: color-mix(in srgb, #30D158 6%, transparent) }
+.wd .wt { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
+.wd .ww { flex: 1 1 100%; min-width: 0; font-size: 20px; margin-bottom: 2px; font-weight: 700; overflow-wrap: anywhere }
+.wd .wb { height: 32px; padding: 0 10px; border-radius: 9px; border: .5px solid var(--line); background: var(--card); color: var(--ink); font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px }
+.wd .wb:hover { border-color: var(--accent) }
+.wd .wb.on { background: var(--accent); border-color: var(--accent); color: #fff }
+.wd .wb.x { color: var(--muted) }
+.wd .wsp { margin-top: 6px; font-size: 22px; letter-spacing: .02em; font-family: ui-rounded, -apple-system, BlinkMacSystemFont, sans-serif; color: var(--ink) }
+.wd .wsp small { font-size: 14px; color: var(--muted); letter-spacing: 0 }
+.wd .wipa { font-size: 15px; color: var(--muted); font-family: "Charis SIL", "Doulos SIL", "Lucida Grande", "Segoe UI", sans-serif }
+.wd .wctx { margin-top: 6px; font-size: 14px; color: var(--muted) }
+.wd .wctx mark { background: color-mix(in srgb, #30D158 30%, transparent); color: var(--ink); border-radius: 3px; padding: 0 2px }
+.wd .wctx button { border: 0; background: none; color: var(--accent); font: inherit; font-weight: 650; padding: 0; margin-left: 4px }
+.key { font-size: 13px; color: var(--muted); margin: 0 0 10px }
+.toast { position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%); z-index: 40; background: #1D1D1F; color: #fff; padding: 9px 16px; border-radius: 999px; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(0, 0, 0, .3) }
 .modal { position: fixed; inset: 0; z-index: 30; display: grid; grid-template-columns: minmax(0, 560px); justify-content: center; align-items: center; padding: 16px; background: rgba(0, 0, 0, .45); -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px) }
 .dlg { width: 100%; min-width: 0; max-height: calc(100vh - 32px); overflow: auto; background: var(--card); border: .5px solid var(--line); border-radius: 18px; padding: 18px; box-shadow: 0 24px 60px rgba(0, 0, 0, .35) }
 .dlg h3 { margin: 0 0 10px; font-size: 17px }
@@ -71,7 +89,7 @@ header { position: sticky; top: 0; z-index: 5; background: color-mix(in srgb, va
 @media (max-width: 480px) { .cm-go span { display: none } .cm-go { padding: 0 10px } }
 .parts { flex: none }
 .head .parts button { height: 30px; padding: 0 12px; font-size: 14px }
-@media (max-width: 480px) { .head h1 { display: none } .head .parts button { padding: 0 9px; font-size: 13px } }
+@media (max-width: 480px) { .head h1 { display: none } .head .parts button { padding: 0 11px; font-size: 14px } .head .parts .pw { display: none } }
 .theme { flex: none; width: 36px; height: 36px; display: grid; place-items: center; border: .5px solid var(--line); border-radius: 50%; background: var(--card); color: var(--ink) }
 .theme:hover { border-color: var(--accent) }
 .theme svg { width: 18px; height: 18px }
@@ -138,12 +156,30 @@ main { max-width: 760px; margin: 0 auto; padding: 16px }
     <div class="seg parts" id="parts" role="radiogroup" aria-label="Part"></div>
     <select id="jump" aria-label="Go to slide"></select>
     <button class="cm-go" id="cmGo" type="button" aria-label="Comments"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span>Comments</span><b id="cmCount"></b></button>
+    <button class="cm-go" id="wdGo" type="button" aria-label="Words to practice"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/></svg><span>Words</span><b id="wdCount"></b></button>
     <button class="theme" id="theme" type="button"></button>
   </div>
 </header>
 <main id="list"></main>
 
-<button class="sel-bubble" id="selBubble" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6"/><path d="M9 10h6"/></svg>Comment</button>
+<div class="sel-bubble" id="selBubble" hidden>
+  <button id="selSave" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z"/></svg><span>Save</span></button>
+  <button id="selCm" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M12 7v6"/><path d="M9 10h6"/></svg>Comment</button>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<div class="modal" id="wdModal" hidden>
+  <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="wdTitle">
+    <h3 id="wdTitle">Pronunciation</h3>
+    <p class="key">Read the big line out loud, as if it were English: the syllable in CAPITALS is the strong one. Below it, the same sounds in phonetic symbols (IPA). Double-click a word in the speech, or select a phrase, and press Save to add it here.</p>
+    <div class="all-cm" id="wdList"></div>
+    <p class="key" style="margin-top:10px">Pronunciations: CMU Pronouncing Dictionary, US English.</p>
+    <div class="row">
+      <span style="flex:1"></span>
+      <button class="btn" id="wdClose" type="button">Close</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal" id="cmModal" hidden>
   <div class="dlg" role="dialog" aria-modal="true" aria-labelledby="cmTitle">
@@ -188,7 +224,7 @@ main { max-width: 760px; margin: 0 auto; padding: 16px }
   </div>
 </div>
 
-<script src="data.js?v=fef1987c"></script>
+<script src="data.js?v=671bf754"></script>
 <script>
 (() => {
   // The deck's slides, in parts (one per class). The page shows one part: #part-1, #part-2.
@@ -469,11 +505,13 @@ main { max-width: 760px; margin: 0 auto; padding: 16px }
   document.getElementById("next").onclick = () => { const i = Math.min(SL.length - 1, cur.i + 1); moveTo(i); go(i) };
   const go = i => document.getElementById("s" + SL[i].n).scrollIntoView({ behavior: "smooth", block: "start" });
   jump.onchange = () => { const i = +jump.value; moveTo(i); go(i) };
+  let clickT = 0;
   list.addEventListener("click", e => {
     const b = e.target.closest(".listen");
     if (b) { const i = +b.dataset.i; if (playing && cur.i === i) pause(); else if (paused && cur.i === i) resume(); else start(i, 0); return }
     const p = e.target.closest(".p");
-    if (p && !getSelection().toString()) start(+p.dataset.i, +p.dataset.k);
+    clearTimeout(clickT);
+    if (p && e.detail === 1) clickT = setTimeout(() => { if (!getSelection().toString()) start(+p.dataset.i, +p.dataset.k) }, 300);
   });
   speedBox.onclick = e => {
     const b = e.target.closest("button"); if (!b) return;
@@ -489,7 +527,7 @@ main { max-width: 760px; margin: 0 auto; padding: 16px }
   };
   document.addEventListener("keydown", e => {
     if (e.target.closest("select, input, textarea")) return;
-    if (!cmModal.hidden || !allModal.hidden) { if (e.key === "Escape") { closeCm(); allModal.hidden = true } return }
+    if (!cmModal.hidden || !allModal.hidden || !wdModal.hidden) { if (e.key === "Escape") { closeCm(); allModal.hidden = true; closeWords() } return }
     if (e.code === "Space") { e.preventDefault(); playBtn.click() }
     else if (e.key === "ArrowRight") document.getElementById("next").click();
     else if (e.key === "ArrowLeft") document.getElementById("prev").click();
@@ -562,6 +600,7 @@ main { max-width: 760px; margin: 0 auto; padding: 16px }
     if (!p1 || !sec || !quote || (p2 && p2.closest(".slide") !== sec)) { bubble.hidden = true; pending = null; return }
     const s = SL[+sec.dataset.i], k = +p1.dataset.k;
     pending = { n: s.n, k, quote, para: s.paras[k], title: s.title };
+    document.querySelector("#selSave span").textContent = /\s/.test(quote) ? "Save phrase" : "Save word";
     const rect = r.getBoundingClientRect(), touch = matchMedia("(pointer: coarse)").matches;
     bubble.hidden = false;
     const bw = bubble.offsetWidth, bh = bubble.offsetHeight;
@@ -575,7 +614,8 @@ main { max-width: 760px; margin: 0 auto; padding: 16px }
   document.addEventListener("selectionchange", () => { clearTimeout(selT); selT = setTimeout(checkSel, 250) });
   addEventListener("scroll", () => { if (!bubble.hidden) checkSel() }, { passive: true });
   bubble.addEventListener("pointerdown", e => e.preventDefault());  // keep the selection when the button is pressed
-  bubble.onclick = () => { if (pending) { openCm({ id: Date.now(), ...pending, note: "" }); getSelection().removeAllRanges() } };
+  document.getElementById("selCm").onclick = () => { if (pending) { openCm({ id: Date.now(), ...pending, note: "" }); getSelection().removeAllRanges() } };
+  document.getElementById("selSave").onclick = () => { if (pending) { saveWord(pending); getSelection().removeAllRanges(); bubble.hidden = true } };
   list.addEventListener("click", e => {
     const add = e.target.closest("[data-cm]");
     if (add) { const s = SL[+add.dataset.cm]; openCm({ id: Date.now(), n: s.n, k: null, quote: "", para: "", title: s.title, note: "" }); return }
@@ -635,9 +675,93 @@ main { max-width: 760px; margin: 0 auto; padding: 16px }
   };
   renderCm();
 
+  // ---- words to practice: saved from the speech, each with how it sounds (respelling + IPA), to hear normal, slow, or 3 times ----
+  const PRON = window.PRON || {};
+  let words = store.get("words", []);
+  const wdModal = document.getElementById("wdModal"), toastEl = document.getElementById("toast");
+  let toastT = 0;
+  function toast(t) { toastEl.textContent = t; toastEl.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => toastEl.hidden = true, 1800) }
+  const tokens = t => t.match(/[A-Za-z][A-Za-z'’]*/g) || [];
+  const pronOf = w => PRON[w] || PRON[w.toLowerCase().replace(/’/g, "'")] || null;
+  function sentenceOf(para, quote) {
+    const parts = para.split(/(?<=[.?!…])\s+/);
+    return parts.find(x => x.includes(quote)) || para;
+  }
+  function saveWord(p) {
+    const text = p.quote.replace(/^[^A-Za-z0-9]+|[^A-Za-z0-9’']+$/g, "");
+    if (!text) return;
+    if (words.some(w => w.text.toLowerCase() === text.toLowerCase())) { toast(`“${text}” is already in your words`); return }
+    words.unshift({ id: Date.now(), text, n: p.n, k: p.k, ctx: sentenceOf(p.para || "", p.quote), at: new Date().toISOString() });
+    store.set("words", words); renderWordCount(); toast(`Saved: ${text}`);
+  }
+  function renderWordCount() { document.getElementById("wdCount").textContent = words.length ? String(words.length) : "" }
+  function pronHTML(text) {
+    const ts = tokens(text);
+    if (ts.length === 1) {
+      const r = pronOf(ts[0]);
+      return r ? `<div class="wsp">${esc(r.sp)}</div><div class="wipa">${esc(r.ipa)}</div>` : `<div class="wsp"><small>No written pronunciation for this word. Listen to it.</small></div>`;
+    }
+    const rs = ts.map(t => ({ t, r: pronOf(t) }));
+    return `<div class="wsp">${rs.map(x => x.r ? esc(x.r.sp) : `<small>${esc(x.t)}</small>`).join(" · ")}</div><div class="wipa">${rs.map(x => x.r ? esc(x.r.ipa.slice(1, -1)) : "…").join(" ")}</div>`;
+  }
+  function renderWords() {
+    document.getElementById("wdList").innerHTML = words.length ? words.map(w => {
+      const s = ALL.find(x => x.n === w.n);
+      const ctx = w.ctx ? esc(w.ctx).replace(esc(w.text), `<mark>${esc(w.text)}</mark>`) : "";
+      return `<div class="wd" data-w="${w.id}">
+        <div class="wt"><span class="ww">${esc(w.text)}</span>
+          <button class="wb" type="button" data-say="1" title="Listen">▶ Listen</button>
+          <button class="wb" type="button" data-say="0.6" title="Listen slowly">🐢 Slow</button>
+          <button class="wb" type="button" data-say="x3" title="Three times, with a silence after each one for you to say it">↻ 3×</button>
+          <button class="wb x" type="button" data-wdel="${w.id}" aria-label="Remove ${esc(w.text)}">✕</button></div>
+        ${pronHTML(w.text)}
+        ${ctx ? `<div class="wctx">${ctx}${s ? `<button type="button" data-wgo="${s.n}">Slide ${s.n} ›</button>` : ""}</div>` : ""}
+      </div>`;
+    }).join("") : '<p class="empty">No words yet. Double-click a word you find hard to say, or select a phrase, and press Save.</p>';
+  }
+  // Saying a saved word: the reading pauses first; "3×" leaves a silence after each time, a little longer than the word, to say it back.
+  let wordTok = 0;
+  function sayWord(text, how, btn) {
+    if (playing) pause();
+    const my = ++wordTok; speechSynthesis.cancel();
+    document.querySelectorAll(".wb.on").forEach(b => b.classList.remove("on"));
+    const v = voice(), say = speechOf(text).say, times = how === "x3" ? 3 : 1, r = how === "x3" ? rate : +how * (how === "1" ? rate : 1);
+    let k = 0;
+    btn.classList.add("on");
+    const one = () => {
+      if (my !== wordTok) return;
+      if (k++ >= times) { btn.classList.remove("on"); return }
+      const u = new SpeechSynthesisUtterance(say), t0 = performance.now();
+      if (v) u.voice = v;
+      u.lang = v ? v.lang.replace("_", "-") : "en-US";
+      u.rate = r;
+      u.onend = () => setTimeout(one, k < times ? Math.max(1200, (performance.now() - t0) * 1.4) : 0);
+      u.onerror = () => btn.classList.remove("on");
+      speechSynthesis.speak(u);
+    };
+    setTimeout(one, 120);
+  }
+  function closeWords() { wdModal.hidden = true; wordTok++; speechSynthesis.cancel() }
+  document.getElementById("wdGo").onclick = () => { renderWords(); wdModal.hidden = false };
+  document.getElementById("wdClose").onclick = closeWords;
+  wdModal.addEventListener("click", e => {
+    if (e.target === wdModal) { closeWords(); return }
+    const card = e.target.closest("[data-w]"), w = card && words.find(x => x.id === +card.dataset.w);
+    const sayB = e.target.closest("[data-say]"), del = e.target.closest("[data-wdel]"), go = e.target.closest("[data-wgo]");
+    if (sayB && w) sayWord(w.text, sayB.dataset.say, sayB);
+    if (del) { words = words.filter(x => x.id !== +del.dataset.wdel); store.set("words", words); renderWords(); renderWordCount() }
+    if (go) {
+      closeWords();
+      const n = +go.dataset.wgo, el = document.getElementById("s" + n), s = ALL.find(x => x.n === n);
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      else if (s) { store.set("goto", n); location.hash = "#part-" + s.part; location.reload() }
+    }
+  });
+  renderWordCount();
+
   // Part 1 / Part 2: each part keeps its own place and time; the voice stops and the page opens the other part.
   const partsBox = document.getElementById("parts");
-  partsBox.innerHTML = PARTS.map(p => `<button type="button" role="radio" aria-checked="${p.p === PART.p}" data-part="${p.p}" title="Class ${esc(p.cls)} · ${esc(p.title)}">Part ${p.p}</button>`).join("");
+  partsBox.innerHTML = PARTS.map(p => `<button type="button" role="radio" aria-checked="${p.p === PART.p}" data-part="${p.p}" title="Part ${p.p} · Class ${esc(p.cls)} · ${esc(p.title)}"><span class="pw">Part </span>${p.p}</button>`).join("");
   partsBox.onclick = e => {
     const b = e.target.closest("[data-part]"); if (!b || +b.dataset.part === PART.p) return;
     if (tts) speechSynthesis.cancel();
